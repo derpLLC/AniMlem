@@ -1,4 +1,4 @@
-package com.derpllc.kittycats.ui.theme
+package com.derpllc.animlem.ui.theme
 
 import androidx.compose.material.Typography
 import androidx.compose.ui.text.TextStyle

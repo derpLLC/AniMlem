@@ -1,4 +1,4 @@
-package com.derpllc.kittycats
+package com.derpllc.animlem
 
 import org.junit.Test
 
