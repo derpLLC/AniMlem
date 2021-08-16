@@ -1,7 +1,6 @@
 package com.derpllc.animlem
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -17,13 +16,11 @@ import coil.annotation.ExperimentalCoilApi
 import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
 import coil.request.CachePolicy
+import com.derpllc.animlem.repository.fetchImageURL
 import com.derpllc.animlem.ui.theme.KittyCatsTheme
-import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
-import okhttp3.*
-import java.io.IOException
 
 class MainActivity : ComponentActivity() {
+    @ExperimentalCoilApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -45,17 +42,21 @@ fun Layout() {
     Box(modifier = Modifier
         .fillMaxSize()
     ) {
-        if(imgUrl.value.isBlank()) fetchImageURL()
-        DisplayImage(imgUrl.value)
+        while (imgUrl.value.isBlank()) {
+            imgUrl.value = fetchImageURL()
+            // Sleep for 0.5 seconds and let it fetch the url
+            Thread.sleep(500)
+        }
+        DisplayImage()
         GenerateKittyButton()
     }
 }
 
 @ExperimentalCoilApi
 @Composable
-fun DisplayImage(url: String) {
+fun DisplayImage() {
     val painter = rememberImagePainter(
-        data = url,
+        data = imgUrl.value,
         builder = {
             crossfade(true)
             memoryCachePolicy(CachePolicy.DISABLED)
@@ -81,6 +82,7 @@ fun DisplayImage(url: String) {
     )
 }
 
+@Preview
 @Composable
 fun GenerateKittyButton() {
     Column(
@@ -91,47 +93,9 @@ fun GenerateKittyButton() {
             .padding(bottom = 20.dp)
     ) {
         Button(onClick = {
-            fetchImageURL()
+            imgUrl.value = fetchImageURL()
         }) {
             Text(text = "Another One!")
         }
-    }
-}
-
-data class Mlem(
-    @SerializedName("url") val URI: String
-)
-
-fun fetchImageURL() {
-    val url = "https://mlem.tech/api/randommlem"
-
-    val request = Request.Builder().url(url).build()
-
-    val client = OkHttpClient()
-
-    val gson = Gson()
-
-    client.newCall(request).enqueue(object : Callback {
-
-        override fun onResponse(call: Call, response: Response) {
-            val body = response.body?.string()
-            if (body != null) {
-                val mlem = gson.fromJson(body, Mlem::class.java)
-                imgUrl.value = mlem.URI
-            }
-        }
-
-        override fun onFailure(call: Call, e: IOException) {
-            Log.e("Image Get Request Failure: ", e.message.toString())
-        }
-
-    })
-}
-
-@Preview(showSystemUi=true)
-@Composable
-fun DefaultPreview() {
-    KittyCatsTheme {
-        Layout()
     }
 }
